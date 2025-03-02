@@ -1,0 +1,10 @@
+".env
+*.retry
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+.kube/
+__pycache__/
+*.pyc
+.DS_Store" | save .gitignore
