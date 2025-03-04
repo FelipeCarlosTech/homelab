@@ -1,0 +1,144 @@
+---
+# Playbook principal para configurar el servidor homelab
+- name: Configure Homelab Base Server
+  hosts: homelab
+  become: true
+  vars:
+    docker_users:
+      - "{{ ansible_user }}"
+    k3s_version: "v1.28.6+k3s2"
+    
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        
+    - name: Install base packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - vim
+          - htop
+          - ufw #Firewall
+          - python3-pip
+          - apt-transport-https #Allow Download third part packages
+          - ca-certificates #Verify secure connections
+          - gnupg #Tool for encrypting and signing data
+          - lsb-release #See release details
+          - net-tools #Manage network
+          - iotop #Show the process with most use of details
+          - jq #Filter and manage json files
+        state: present
+
+    - name: Configure SSH for security
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+      notify: restart ssh
+
+    - name: Configure UFW
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - 22    # SSH
+        - 80    # HTTP
+        - 443   # HTTPS
+        - 6443  # Kubernetes API
+        - 2379  # etcd client
+        - 2380  # etcd peer
+        - 10250 # Kubelet API
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Install Docker
+      block:
+        - name: Add Docker GPG key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+        - name: Add Docker repository
+          apt_repository:
+            repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+
+        - name: Install Docker packages
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            state: present
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add users to Docker group
+      user:
+        name: "{{ item }}"
+        groups: docker
+        append: yes
+      loop: "{{ docker_users }}"
+
+    - name: Install k3s
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Enable k3s service
+      service:
+        name: k3s
+        state: started
+        enabled: yes
+
+    - name: Create .kube directory
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy k3s config
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "/home/{{ ansible_user }}/.kube/config"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+        remote_src: yes
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: sshd
+        state: restarted
