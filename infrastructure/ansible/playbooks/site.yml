@@ -6,7 +6,8 @@
   vars:
     docker_users:
       - "{{ ansible_user }}"
-    k3s_version: "v1.28.6+k3s2"
+      - "felipecarlos"  
+    k3s_version: "v1.31.5+k3s1"
     
   tasks:
     - name: Update apt cache
@@ -116,20 +117,69 @@
 
     - name: Create .kube directory
       file:
-        path: "/home/{{ ansible_user }}/.kube"
+        path: "/home/{{ item }}/.kube"
         state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        owner: "{{ item }}"
+        group: "{{ item }}"
         mode: '0755'
+      loop:
+        - "{{ ansible_user }}"
+        - "felipecarlos"
 
     - name: Copy k3s config
       copy:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: "/home/{{ ansible_user }}/.kube/config"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        dest: "/home/{{ item }}/.kube/config"
+        owner: "{{ item }}"
+        group: "{{ item }}"
         mode: '0600'
         remote_src: yes
+      loop:
+        - "{{ ansible_user }}"
+        - "felipecarlos"
+
+    - name: Detect user shell config file
+      set_fact:
+        shell_rc_file: "{{ '.bashrc' if ansible_user_shell is search('bash') else '.zshrc' if ansible_user_shell is search('zsh') else '.profile' }}"
+
+    - name: Ensure KUBECONFIG environment variable is set
+      lineinfile:
+        path: "/home/{{ item }}/{{ shell_rc_file }}"
+        line: "export KUBECONFIG=$HOME/.kube/config"
+        state: present
+        create: no
+        regexp: "^export KUBECONFIG="
+      loop:
+        - "{{ ansible_user }}"
+        - "felipecarlos"
+
+
+    - name: Source shell configuration in current environment
+      shell: "source /home/{{ item }}/{{ shell_rc_file }}"
+      args:
+        executable: "{{ ansible_user_shell }}"
+      changed_when: false
+      loop:
+        - "{{ ansible_user }}"
+        - "felipecarlos"
+
+
+    - name: Verify kubectl configuration works
+      command: "kubectl version"
+      register: kubectl_test
+      changed_when: false
+      failed_when: false
+  
+    - name: Display kubectl verification result
+      debug:
+        msg: "Kubectl config verification: {{ 'SUCCESS' if kubectl_test.rc == 0 else 'FAILED - ' + kubectl_test.stderr }}"
+
+    - name: Set global KUBECONFIG environment variable
+      lineinfile:
+        path: /etc/environment
+        line: 'KUBECONFIG="/home/ansible/.kube/config"'
+        state: present
+      become: true
 
     - name: Install Helm
       shell: |
@@ -140,5 +190,5 @@
   handlers:
     - name: restart ssh
       service:
-        name: sshd
+        name: ssh
         state: restarted
