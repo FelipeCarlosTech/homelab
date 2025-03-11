@@ -36,5 +36,5 @@ homelab/
 
 ```bash
 cd homelab/infrastructure/ansible/
-ansible-playbook -i playbooks/site.yml
+ansible-playbook playbooks/site.yml
 ```

@@ -7,4 +7,6 @@
 .kube/
 __pycache__/
 *.pyc
-.DS_Store" | save .gitignore
+.DS_Store
+.ansible
+.vscode
