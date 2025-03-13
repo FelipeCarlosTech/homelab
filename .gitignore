@@ -1,12 +1,69 @@
-".env
-*.retry
+# Terraform specific files
+**/.terraform/*
 *.tfstate
-*.tfstate.backup
-.terraform/
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+crash.log
+crash.*.log
 .terraform.lock.hcl
-.kube/
-__pycache__/
-*.pyc
+
+# Kubernetes specific
+kubeconfig*
+*.kubeconfig
+*.kube/config
+
+# Editor and OS specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+
+# Credentials and secrets
+*.pem
+*.key
+*.pub
+credentials.json
+*secrets*
+*password*
+*token*
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Ansible specific
+*.retry
 .ansible
-.vscode
+ansible/*.vault
+vault.yml
+vault.yaml
+*vault.yml
+*vault.yaml
+.vault_pass
+.vault_pass.txt
+inventory/host_vars/**/vault.yml
+inventory/group_vars/**/vault.yml
+roles/*/galaxy-roles/
+.facts/
+*.fact
+.ansible/tmp/
+.galaxy_install_info
+ansible_collections/

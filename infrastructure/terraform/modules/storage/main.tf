@@ -22,6 +22,7 @@ resource "kubernetes_persistent_volume_claim" "db_data" {
       }
     }
   }
+  wait_until_bound = false
 }
 
 resource "kubernetes_persistent_volume_claim" "prometheus_data" {
@@ -45,6 +46,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_data" {
       }
     }
   }
+  wait_until_bound = false
 }
 
 resource "kubernetes_persistent_volume_claim" "grafana_data" {
@@ -68,4 +70,5 @@ resource "kubernetes_persistent_volume_claim" "grafana_data" {
       }
     }
   }
+  wait_until_bound = false
 }
