@@ -1,0 +1,26 @@
+image:
+  tag: 15.3.0-debian-11-r3
+
+primary:
+  persistence:
+    size: 5Gi
+    storageClass: ""
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  extraEnvVars:
+    - name: POSTGRES_SHARED_PRELOAD_LIBRARIES
+      value: "pg_stat_statements"
+    - name: POSTGRES_MAX_CONNECTIONS
+      value: "100"
+
+auth:
+  enablePostgresUser: true
+  username: ecommerce_user
+  database: ecommerce
