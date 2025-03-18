@@ -35,7 +35,7 @@ module "security" {
 }
 
 module "microservices" {
-  source = "../../modules/microservices"
+  source = "./modules/microservices"
 
   namespace               = "microservices"
   environment             = var.environment

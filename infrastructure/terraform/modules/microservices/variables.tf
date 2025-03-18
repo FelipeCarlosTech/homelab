@@ -24,7 +24,7 @@ variable "db_secret_name" {
 variable "enable_metrics" {
   description = "Habilitar métricas para Prometheus"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "ingress_config_map_name" {

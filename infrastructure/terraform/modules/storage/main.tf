@@ -4,18 +4,19 @@
 resource "kubernetes_persistent_volume_claim" "db_data" {
   metadata {
     name      = "db-data"
-    namespace = var.namespace
+    namespace = "microservices"
+    # namespace = var.namespace
     labels = {
       environment = var.environment
       managed-by  = "terraform"
       app         = "ecommerce-db"
     }
   }
-  
+
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes       = ["ReadWriteOnce"]
     storage_class_name = var.storage_class
-    
+
     resources {
       requests = {
         storage = "5Gi"
@@ -35,11 +36,11 @@ resource "kubernetes_persistent_volume_claim" "prometheus_data" {
       app         = "prometheus"
     }
   }
-  
+
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes       = ["ReadWriteOnce"]
     storage_class_name = var.storage_class
-    
+
     resources {
       requests = {
         storage = "8Gi"
@@ -59,11 +60,11 @@ resource "kubernetes_persistent_volume_claim" "grafana_data" {
       app         = "grafana"
     }
   }
-  
+
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes       = ["ReadWriteOnce"]
     storage_class_name = var.storage_class
-    
+
     resources {
       requests = {
         storage = "2Gi"

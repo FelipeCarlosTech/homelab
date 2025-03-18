@@ -18,11 +18,11 @@ terraform {
     #   version = "~> 5.0.0"
     # }
   }
-  
+
   backend "local" {
     path = "terraform.tfstate"
   }
-  
+
   # backend "s3" {
   #   bucket  = "homelab-tfstate"
   #   key     = "terraform/state"
@@ -30,3 +30,4 @@ terraform {
   #   encrypt = true
   # }
 }
+

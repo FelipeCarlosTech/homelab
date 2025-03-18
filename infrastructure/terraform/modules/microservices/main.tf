@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.14.0"
+    }
+  }
+}
+
 resource "helm_release" "ingress_nginx" {
   name       = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
@@ -17,7 +26,7 @@ resource "helm_release" "ingress_nginx" {
 
   set {
     name  = "controller.service.type"
-    value = "LoadBalancer"
+    value = "NodePort"
   }
 
   set {
@@ -32,7 +41,12 @@ resource "helm_release" "ingress_nginx" {
 
   set {
     name  = "controller.metrics.serviceMonitor.enabled"
-    value = var.enable_metrics
+    value = "false"
+  }
+
+  set {
+    name  = "controller.metrics.serviceMonitor.additionalLabels"
+    value = "{}"
   }
 
   # Aquí referenciamos el ConfigMap existente en lugar de duplicar configuración
@@ -69,19 +83,20 @@ resource "helm_release" "cert_manager" {
 }
 
 # 3. Desplegar configuración de ClusterIssuer para cert-manager
-resource "kubernetes_manifest" "cluster_issuer" {
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name = "selfsigned"
-    }
-    spec = {
-      selfSigned = {}
-    }
-  }
+resource "kubectl_manifest" "cluster_issuer" {
+  yaml_body = <<YAML
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+YAML
 
-  depends_on = [helm_release.cert_manager]
+  depends_on        = [helm_release.cert_manager]
+  server_side_apply = true
+  wait              = true
+  wait_for_rollout  = true
 }
 
 # 4. Despliegue de la base de datos PostgreSQL
@@ -107,7 +122,7 @@ resource "helm_release" "postgresql" {
     value = "db-data"
   }
 
-  depends_on = [kubernetes_manifest.cluster_issuer]
+  depends_on = [kubectl_manifest.cluster_issuer]
 }
 
 # 5. Despliegue de la API de productos (backend)
