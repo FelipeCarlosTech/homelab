@@ -1,14 +1,15 @@
-variable "namespace" {
-  description = "Namespace base para los recursos de Kubernetes"
-  type        = string
+variable "namespaces" {
+  description = "Map of namespaces to create"
+  type        = map(string)
 }
 
 variable "k8s_cluster_name" {
-  description = "Nombre del cluster de Kubernetes"
+  description = "Name of the Kubernetes cluster"
   type        = string
 }
 
 variable "environment" {
-  description = "Entorno de despliegue (local, gcp)"
+  description = "Environment name"
   type        = string
 }
+

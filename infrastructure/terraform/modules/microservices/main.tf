@@ -12,7 +12,7 @@ resource "helm_release" "ingress_nginx" {
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
   version    = "4.7.1"
-  namespace  = var.namespace
+  namespace  = var.network_namespace
 
   set {
     name  = "controller.kind"
@@ -72,7 +72,7 @@ resource "helm_release" "cert_manager" {
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "v1.13.1"
-  namespace  = var.namespace
+  namespace  = var.network_namespace
 
   set {
     name  = "installCRDs"
@@ -99,33 +99,7 @@ YAML
   wait_for_rollout  = true
 }
 
-# 4. Despliegue de la base de datos PostgreSQL
-resource "helm_release" "postgresql" {
-  name       = "postgres"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "postgresql"
-  version    = "12.5.7"
-  namespace  = var.namespace
-
-  values = [
-    file("${path.module}/templates/postgresql-values.yaml")
-  ]
-
-  # Obtener valores del secreto existente
-  set {
-    name  = "auth.existingSecret"
-    value = var.db_secret_name
-  }
-
-  set {
-    name  = "primary.persistence.existingClaim"
-    value = "db-data"
-  }
-
-  depends_on = [kubectl_manifest.cluster_issuer]
-}
-
-# 5. Despliegue de la API de productos (backend)
+# 4. Despliegue de la API de productos (backend)
 resource "kubernetes_deployment" "products_api" {
   metadata {
     name      = "products-api"
@@ -226,7 +200,6 @@ resource "kubernetes_deployment" "products_api" {
     }
   }
 
-  depends_on = [helm_release.postgresql]
 }
 
 resource "kubernetes_service" "products_api" {
@@ -253,7 +226,7 @@ resource "kubernetes_service" "products_api" {
   }
 }
 
-# 6. Despliegue de la API de órdenes
+# 5. Despliegue de la API de órdenes
 resource "kubernetes_deployment" "orders_api" {
   metadata {
     name      = "orders-api"
@@ -359,7 +332,7 @@ resource "kubernetes_deployment" "orders_api" {
     }
   }
 
-  depends_on = [helm_release.postgresql, kubernetes_service.products_api]
+  depends_on = [kubernetes_service.products_api]
 }
 
 resource "kubernetes_service" "orders_api" {
@@ -386,7 +359,7 @@ resource "kubernetes_service" "orders_api" {
   }
 }
 
-# 7. Despliegue de la aplicación web (frontend)
+# 6. Despliegue de la aplicación web (frontend)
 resource "kubernetes_deployment" "ecommerce_web" {
   metadata {
     name      = "ecommerce-web"
@@ -475,7 +448,7 @@ resource "kubernetes_service" "ecommerce_web" {
   }
 }
 
-# 8. Configuraciones de Ingress
+# 7. Configuraciones de Ingress
 resource "kubernetes_ingress_v1" "api_ingress" {
   metadata {
     name      = "api-ingress"

@@ -1,33 +1,13 @@
-resource "kubernetes_namespace" "homelab" {
+resource "kubernetes_namespace" "namespaces" {
+  for_each = var.namespaces
+
   metadata {
-    name = var.namespace
-    
+    name = each.value
+
     labels = {
       environment = var.environment
-      managed-by  = "terraform"
+      managed_by  = "terraform"
     }
   }
 }
 
-resource "kubernetes_namespace" "monitoring" {
-  metadata {
-    name = "monitoring"
-    
-    labels = {
-      environment = var.environment
-      managed-by  = "terraform"
-    }
-  }
-}
-
-resource "kubernetes_namespace" "microservices" {
-  metadata {
-    name = "microservices"
-    
-    labels = {
-      environment = var.environment
-      managed-by  = "terraform"
-      app         = "ecommerce"
-    }
-  }
-}

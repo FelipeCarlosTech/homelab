@@ -2,10 +2,6 @@ image:
   tag: 15.3.0-debian-11-r3
 
 primary:
-  persistence:
-    size: 5Gi
-    storageClass: ""
-
   resources:
     limits:
       cpu: 500m

@@ -4,7 +4,7 @@
 resource "kubernetes_secret" "db_credentials" {
   metadata {
     name      = "db-credentials"
-    namespace = "microservices"
+    namespace = "databases"
     labels = {
       environment = var.environment
       managed-by  = "terraform"

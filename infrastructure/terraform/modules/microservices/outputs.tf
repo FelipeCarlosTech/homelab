@@ -24,3 +24,8 @@ output "api_services" {
     orders   = kubernetes_service.orders_api.metadata[0].name
   }
 }
+
+output "cluster_issuer" {
+  value = kubectl_manifest.cluster_issuer
+}
+

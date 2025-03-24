@@ -4,10 +4,28 @@ variable "environment" {
   default     = "local"
 }
 
-variable "namespace" {
-  description = "Namespace base para los recursos de Kubernetes"
+variable "infrastructure_namespace" {
+  description = "Namespace for infrastructure components"
   type        = string
-  default     = "homelab"
+  default     = "infrastructure"
+}
+
+variable "databases_namespace" {
+  description = "Namespace for database components"
+  type        = string
+  default     = "databases"
+}
+
+variable "microservices_namespace" {
+  description = "Namespace for application microservices"
+  type        = string
+  default     = "microservices"
+}
+
+variable "monitoring_namespace" {
+  description = "Namespace for monitoring components"
+  type        = string
+  default     = "monitoring"
 }
 
 variable "k8s_cluster_name" {
@@ -19,5 +37,6 @@ variable "k8s_cluster_name" {
 variable "storage_class" {
   description = "Storage class por defecto para PVCs"
   type        = string
-  default     = "local-path"  # Storage class incluido por defecto en k3s
+  default     = "local-path" # Storage class incluido por defecto en k3s
 }
+

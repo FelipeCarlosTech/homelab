@@ -38,3 +38,4 @@ variable "network_namespace" {
   type        = string
   default     = "homelab"
 }
+

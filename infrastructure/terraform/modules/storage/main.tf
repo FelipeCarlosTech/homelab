@@ -1,39 +1,33 @@
-# En k3s, el storage class local-path ya viene configurado por defecto
-# Aquí podemos crear los PVCs persistentes que necesitaremos
-
-resource "kubernetes_persistent_volume_claim" "db_data" {
-  metadata {
-    name      = "db-data"
-    namespace = "microservices"
-    # namespace = var.namespace
-    labels = {
-      environment = var.environment
-      managed-by  = "terraform"
-      app         = "ecommerce-db"
+locals {
+  persistent_volume_claims = {
+    "db-data" = {
+      namespace = var.namespaces["databases"]
+      app       = "ecommerce-db"
+      storage   = "5Gi"
+    },
+    "prometheus-data" = {
+      namespace = var.namespaces["monitoring"]
+      app       = "prometheus"
+      storage   = "8Gi"
+    },
+    "grafana-data" = {
+      namespace = var.namespaces["monitoring"]
+      app       = "grafana"
+      storage   = "2Gi"
     }
   }
-
-  spec {
-    access_modes       = ["ReadWriteOnce"]
-    storage_class_name = var.storage_class
-
-    resources {
-      requests = {
-        storage = "5Gi"
-      }
-    }
-  }
-  wait_until_bound = false
 }
 
-resource "kubernetes_persistent_volume_claim" "prometheus_data" {
+resource "kubernetes_persistent_volume_claim" "pvc" {
+  for_each = local.persistent_volume_claims
+
   metadata {
-    name      = "prometheus-data"
-    namespace = "monitoring"
+    name      = each.key
+    namespace = each.value.namespace
     labels = {
       environment = var.environment
       managed-by  = "terraform"
-      app         = "prometheus"
+      app         = each.value.app
     }
   }
 
@@ -43,31 +37,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_data" {
 
     resources {
       requests = {
-        storage = "8Gi"
-      }
-    }
-  }
-  wait_until_bound = false
-}
-
-resource "kubernetes_persistent_volume_claim" "grafana_data" {
-  metadata {
-    name      = "grafana-data"
-    namespace = "monitoring"
-    labels = {
-      environment = var.environment
-      managed-by  = "terraform"
-      app         = "grafana"
-    }
-  }
-
-  spec {
-    access_modes       = ["ReadWriteOnce"]
-    storage_class_name = var.storage_class
-
-    resources {
-      requests = {
-        storage = "2Gi"
+        storage = each.value.storage
       }
     }
   }

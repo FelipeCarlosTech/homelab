@@ -1,6 +1,6 @@
-variable "namespace" {
+variable "namespaces" {
   description = "Namespace base para los recursos de Kubernetes"
-  type        = string
+  type        = map(string)
 }
 
 variable "storage_class" {
@@ -12,3 +12,4 @@ variable "environment" {
   description = "Entorno de despliegue (local, gcp)"
   type        = string
 }
+

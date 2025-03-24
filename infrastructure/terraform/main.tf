@@ -1,7 +1,14 @@
 module "kubernetes_base" {
   source = "./modules/kubernetes"
 
-  namespace        = var.namespace
+  # Crear todos los namespaces
+  namespaces = {
+    infrastructure = var.infrastructure_namespace
+    databases      = var.databases_namespace
+    microservices  = var.microservices_namespace
+    monitoring     = var.monitoring_namespace
+  }
+
   k8s_cluster_name = var.k8s_cluster_name
   environment      = var.environment
 }
@@ -9,7 +16,12 @@ module "kubernetes_base" {
 module "storage" {
   source = "./modules/storage"
 
-  namespace     = var.namespace
+  namespaces = {
+    infrastructure = var.infrastructure_namespace
+    databases      = var.databases_namespace
+    microservices  = var.microservices_namespace
+    monitoring     = var.monitoring_namespace
+  }
   storage_class = var.storage_class
   environment   = var.environment
 
@@ -19,7 +31,7 @@ module "storage" {
 module "networking" {
   source = "./modules/networking"
 
-  namespace   = var.namespace
+  namespace   = var.infrastructure_namespace
   environment = var.environment
 
   depends_on = [module.kubernetes_base]
@@ -28,28 +40,43 @@ module "networking" {
 module "security" {
   source = "./modules/security"
 
-  namespace   = var.namespace
+  namespace   = var.infrastructure_namespace
   environment = var.environment
 
   depends_on = [module.kubernetes_base, module.networking]
 }
 
+module "databases" {
+  source = "./modules/databases"
+
+  namespace      = var.databases_namespace
+  environment    = var.environment
+  storage_class  = var.storage_class
+  db_secret_name = module.security.security_config.db_secret
+
+  depends_on = [
+    module.kubernetes_base,
+    module.storage,
+    module.security
+  ]
+}
+
 module "microservices" {
   source = "./modules/microservices"
 
-  namespace               = "microservices"
+  namespace               = var.microservices_namespace
   environment             = var.environment
   domain_suffix           = "homelab.local"
   db_secret_name          = module.security.security_config.db_secret
   enable_metrics          = true
-  ingress_config_map_name = module.networking.network_config.ingress_config_map # Nombre del ConfigMap existente
-  network_namespace       = var.namespace                                       # Namespace donde está desplegado el ConfigMap
+  ingress_config_map_name = module.networking.network_config.ingress_config_map
+  network_namespace       = var.infrastructure_namespace
 
   depends_on = [
     module.kubernetes_base,
     module.storage,
     module.networking,
-    module.security
+    module.security,
   ]
 }
 
