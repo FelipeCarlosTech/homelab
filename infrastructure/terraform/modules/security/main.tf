@@ -22,6 +22,28 @@ resource "kubernetes_secret" "db_credentials" {
   type = "Opaque"
 }
 
+resource "kubernetes_secret" "db_credentials_microservices" {
+  metadata {
+    name      = "db-credentials"
+    namespace = "microservices"
+    labels = {
+      environment = var.environment
+      managed-by  = "terraform"
+      app         = "ecommerce-db"
+    }
+  }
+
+  # Mismos datos que el secreto anterior
+  data = {
+    username          = "ecommerce_user"
+    password          = "change_me_in_production"
+    database          = "ecommerce"
+    postgres-password = "change_me_in_production"
+  }
+
+  type = "Opaque"
+}
+
 resource "kubernetes_role" "microservices_role" {
   metadata {
     name      = "microservices-role"
