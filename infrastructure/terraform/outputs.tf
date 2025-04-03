@@ -12,3 +12,9 @@ output "network_config" {
   description = "Configuración de red"
   value       = module.networking.network_config
 }
+
+output "monitoring_endpoints" {
+  description = "Endpoints para acceder a las herramientas de monitoreo"
+  value       = module.monitoring.monitoring_endpoints
+}
+

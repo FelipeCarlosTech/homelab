@@ -1,0 +1,60 @@
+# Valores personalizados para Grafana
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Habilitar plugins útiles
+plugins:
+  - grafana-piechart-panel
+  - grafana-clock-panel
+  - grafana-kubernetes-app
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: "default"
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    provider:
+      name: default
+    searchNamespace: null
+    folder: /var/lib/grafana/dashboards
+
+grafana.ini:
+  auth:
+    disable_login_form: false
+    disable_signout_menu: false
+  users:
+    allow_sign_up: false
+    auto_assign_org: true
+    auto_assign_org_role: Editor
+  auth.anonymous:
+    enabled: false
+  security:
+    admin_user: admin
+    admin_password: admin
+  server:
+    root_url: "%(protocol)s://%(domain)s/"
+  smtp:
+    enabled: false
+  dashboards:
+    default_home_dashboard_path: /var/lib/grafana/dashboards/microservices-dashboard.json

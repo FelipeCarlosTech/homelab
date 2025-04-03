@@ -80,3 +80,32 @@ module "microservices" {
   ]
 }
 
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  namespace         = var.monitoring_namespace
+  environment       = var.environment
+  domain_suffix     = "homelab.local"
+  network_namespace = var.infrastructure_namespace
+
+  prometheus_storage = {
+    pvc_name = module.storage.storage_config.pvc_names["prometheus-data"]
+  }
+
+  grafana_storage = {
+    pvc_name = module.storage.storage_config.pvc_names["grafana-data"]
+  }
+
+  # En producción, usar un secreto externo o al menos variables de entorno
+  grafana_admin = {
+    username = "admin"
+    password = "homelab-admin"
+  }
+
+  depends_on = [
+    module.kubernetes_base,
+    module.storage,
+    module.networking,
+    module.microservices
+  ]
+}

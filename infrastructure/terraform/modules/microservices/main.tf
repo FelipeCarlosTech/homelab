@@ -138,7 +138,7 @@ resource "kubernetes_deployment" "products_api" {
           image = "nginx:alpine" # Reemplaza con tu imagen real
 
           port {
-            container_port = 8080
+            container_port = 80
           }
 
           env {
@@ -178,8 +178,8 @@ resource "kubernetes_deployment" "products_api" {
 
           liveness_probe {
             http_get {
-              path = "/health"
-              port = 8080
+              path = "/"
+              port = 80
             }
             initial_delay_seconds = 30
             period_seconds        = 10
@@ -219,7 +219,7 @@ resource "kubernetes_service" "products_api" {
 
     port {
       port        = 80
-      target_port = 8080
+      target_port = 80
     }
 
     type = "ClusterIP"
@@ -265,7 +265,7 @@ resource "kubernetes_deployment" "orders_api" {
           image = "nginx:alpine" # Reemplaza con tu imagen real
 
           port {
-            container_port = 8080
+            container_port = 80
           }
 
           env {
@@ -310,8 +310,8 @@ resource "kubernetes_deployment" "orders_api" {
 
           liveness_probe {
             http_get {
-              path = "/health"
-              port = 8080
+              path = "/" #Modify for ports of actual microservices...same below
+              port = 80
             }
             initial_delay_seconds = 30
             period_seconds        = 10
@@ -352,7 +352,7 @@ resource "kubernetes_service" "orders_api" {
 
     port {
       port        = 80
-      target_port = 8080
+      target_port = 80
     }
 
     type = "ClusterIP"
