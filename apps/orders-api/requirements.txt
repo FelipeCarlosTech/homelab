@@ -1,0 +1,7 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+psycopg2-binary==2.9.9
+prometheus-flask-exporter==0.22.4
+requests==2.31.0
+pytest==7.4.0
