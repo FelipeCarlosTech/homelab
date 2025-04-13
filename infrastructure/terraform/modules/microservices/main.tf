@@ -135,10 +135,10 @@ resource "kubernetes_deployment" "products_api" {
       spec {
         container {
           name  = "api"
-          image = "nginx:alpine" # Reemplaza con tu imagen real
+          image = "localhost:5000/products-api:latest" # Reemplaza con tu imagen real
 
           port {
-            container_port = 80
+            container_port = 8080
           }
 
           env {
@@ -178,8 +178,8 @@ resource "kubernetes_deployment" "products_api" {
 
           liveness_probe {
             http_get {
-              path = "/"
-              port = 80
+              path = "/health"
+              port = 8080
             }
             initial_delay_seconds = 30
             period_seconds        = 10
@@ -218,8 +218,8 @@ resource "kubernetes_service" "products_api" {
     }
 
     port {
-      port        = 80
-      target_port = 80
+      port        = 8080
+      target_port = 8080
     }
 
     type = "ClusterIP"
@@ -262,10 +262,10 @@ resource "kubernetes_deployment" "orders_api" {
       spec {
         container {
           name  = "api"
-          image = "nginx:alpine" # Reemplaza con tu imagen real
+          image = "localhost:5000/orders-api:latest" # Reemplaza con tu imagen real
 
           port {
-            container_port = 80
+            container_port = 8080
           }
 
           env {
@@ -305,13 +305,13 @@ resource "kubernetes_deployment" "orders_api" {
 
           env {
             name  = "PRODUCTS_API_URL"
-            value = "http://products-api"
+            value = "http://products-api:8080"
           }
 
           liveness_probe {
             http_get {
-              path = "/" #Modify for ports of actual microservices...same below
-              port = 80
+              path = "/health" #Modify for ports of actual microservices...same below
+              port = 8080
             }
             initial_delay_seconds = 30
             period_seconds        = 10
@@ -351,8 +351,8 @@ resource "kubernetes_service" "orders_api" {
     }
 
     port {
-      port        = 80
-      target_port = 80
+      port        = 8080
+      target_port = 8080
     }
 
     type = "ClusterIP"
@@ -390,7 +390,7 @@ resource "kubernetes_deployment" "ecommerce_web" {
       spec {
         container {
           name  = "web"
-          image = "nginx:alpine" # Reemplaza con tu imagen real
+          image = "localhost:5000/homelabshop:latest" # Reemplaza con tu imagen real
 
           port {
             container_port = 80
@@ -398,12 +398,12 @@ resource "kubernetes_deployment" "ecommerce_web" {
 
           env {
             name  = "PRODUCTS_API_URL"
-            value = "http://products-api"
+            value = "http://products-api:8080"
           }
 
           env {
             name  = "ORDERS_API_URL"
-            value = "http://orders-api"
+            value = "http://orders-api:8080"
           }
 
           resources {
@@ -476,7 +476,7 @@ resource "kubernetes_ingress_v1" "api_ingress" {
             service {
               name = kubernetes_service.products_api.metadata[0].name
               port {
-                number = 80
+                number = 8080
               }
             }
           }
@@ -488,7 +488,7 @@ resource "kubernetes_ingress_v1" "api_ingress" {
             service {
               name = kubernetes_service.orders_api.metadata[0].name
               port {
-                number = 80
+                number = 8080
               }
             }
           }

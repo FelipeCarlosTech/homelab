@@ -68,7 +68,7 @@ class OrderItem(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"))
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
+    product_id = db.Column(db.Integer)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=False)
 
@@ -82,6 +82,12 @@ class OrderItem(db.Model):
             "total": float(self.price) * self.quantity,
         }
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Rutas
 @app.route("/health")

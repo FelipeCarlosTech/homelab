@@ -1,16 +1,16 @@
 # Etapa de compilación
-FROM node:16-alpine as build
+FROM --platform=linux/amd64 node:16-alpine as build
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 
 COPY . .
 RUN npm run build
 
 # Etapa de producción
-FROM nginx:alpine
+FROM --platform=linux/amd64 nginx:alpine
 
 # Copiar la build de React
 COPY --from=build /app/build /usr/share/nginx/html

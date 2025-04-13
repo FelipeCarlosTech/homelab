@@ -44,6 +44,12 @@ class Product(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Rutas
 @app.route("/health")

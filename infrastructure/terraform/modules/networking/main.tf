@@ -49,12 +49,33 @@ resource "kubernetes_network_policy" "allow_ingress_controller" {
         }
         pod_selector {
           match_labels = {
-            app = "ingress-nginx"
+            "app.kubernetes.io/component" = "controller"
+            "app.kubernetes.io/instance"  = "ingress-nginx"
+            "app.kubernetes.io/name"      = "ingress-nginx"
           }
         }
       }
     }
     
+    policy_types = ["Ingress"]
+  }
+}
+
+resource "kubernetes_network_policy" "allow_intra_namespace" {
+  metadata {
+    name      = "allow-intra-namespace"
+    namespace = "microservices"
+  }
+
+  spec {
+    pod_selector {}
+
+    ingress {
+      from {
+        pod_selector {}  # Selector vacío = selecciona todos los pods en el mismo namespace
+      }
+    }
+
     policy_types = ["Ingress"]
   }
 }
