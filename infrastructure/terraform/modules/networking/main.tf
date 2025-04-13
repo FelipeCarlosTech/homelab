@@ -44,7 +44,7 @@ resource "kubernetes_network_policy" "allow_ingress_controller" {
       from {
         namespace_selector {
           match_labels = {
-            name = var.namespace
+            "kubernetes.io/metadata.name" = var.namespace
           }
         }
         pod_selector {
