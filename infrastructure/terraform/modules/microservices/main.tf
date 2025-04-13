@@ -143,7 +143,7 @@ resource "kubernetes_deployment" "products_api" {
 
           env {
             name  = "DB_HOST"
-            value = "postgres"
+            value = "postgresql.databases.svc.cluster.local"
           }
 
           env {
@@ -270,7 +270,7 @@ resource "kubernetes_deployment" "orders_api" {
 
           env {
             name  = "DB_HOST"
-            value = "postgres"
+            value = "postgresql.databases.svc.cluster.local"
           }
 
           env {
