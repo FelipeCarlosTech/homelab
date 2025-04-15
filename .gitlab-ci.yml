@@ -1,0 +1,151 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  SSH_HOST: nodezero
+  DOCKER_REGISTRY: "localhost:5000"
+  K8S_CONFIG_FILE: "/home/felipecarlos/.kube/config"
+
+# Cache para acelerar las pruebas
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - apps/products-api/.pytest_cache/
+    - apps/orders-api/.pytest_cache/
+    - apps/homelabshop/node_modules/
+
+# ------ TEST STAGE ------
+
+test-products-api:
+  stage: test
+  image: python:3.9-slim
+  script:
+    - cd apps/products-api
+    - pip install -r requirements.txt
+    - pytest -v tests/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/products-api/**/*
+
+test-orders-api:
+  stage: test
+  image: python:3.9-slim
+  script:
+    - cd apps/orders-api
+    - pip install -r requirements.txt
+    - pytest -v tests/
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/orders-api/**/*
+
+test-frontend:
+  stage: test
+  image: node:16-alpine
+  script:
+    - cd apps/homelabshop
+    - npm install
+    - npm test -- --passWithNoTests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/homelabshop/**/*
+
+# ------ BUILD STAGE ------
+
+.remote-build-push: &remote-build-push
+  stage: build
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client bash
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+build-products-api:
+  <<: *remote-build-push
+  script:
+    - scp -r apps/products-api/ $SSH_HOST:/tmp/products-api/
+    - ssh $SSH_HOST "cd /tmp/products-api && docker build -t $DOCKER_REGISTRY/products-api:latest ."
+    - ssh $SSH_HOST "docker push $DOCKER_REGISTRY/products-api:latest"
+    - ssh $SSH_HOST "rm -rf /tmp/products-api"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/products-api/**/*
+
+build-orders-api:
+  <<: *remote-build-push
+  script:
+    - scp -r apps/orders-api/ $SSH_HOST:/tmp/orders-api/
+    - ssh $SSH_HOST "cd /tmp/orders-api && docker build -t $DOCKER_REGISTRY/orders-api:latest ."
+    - ssh $SSH_HOST "docker push $DOCKER_REGISTRY/orders-api:latest"
+    - ssh $SSH_HOST "rm -rf /tmp/orders-api"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/orders-api/**/*
+
+build-frontend:
+  <<: *remote-build-push
+  script:
+    - scp -r apps/homelabshop/ $SSH_HOST:/tmp/homelabshop/
+    - ssh $SSH_HOST "cd /tmp/homelabshop && docker build -t $DOCKER_REGISTRY/homelabshop:latest ."
+    - ssh $SSH_HOST "docker push $DOCKER_REGISTRY/homelabshop:latest"
+    - ssh $SSH_HOST "rm -rf /tmp/homelabshop"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/homelabshop/**/*
+
+# ------ DEPLOY STAGE ------
+
+.remote-deploy: &remote-deploy
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+deploy-products-api:
+  <<: *remote-deploy
+  script:
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices products-api"
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices products-api"
+  dependencies:
+    - build-products-api
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/products-api/**/*
+
+deploy-orders-api:
+  <<: *remote-deploy
+  script:
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices orders-api"
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices orders-api"
+  dependencies:
+    - build-orders-api
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/orders-api/**/*
+
+deploy-frontend:
+  <<: *remote-deploy
+  script:
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices ecommerce-web"
+    - ssh $SSH_HOST "kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices ecommerce-web"
+  dependencies:
+    - build-frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - apps/homelabshop/**/*
