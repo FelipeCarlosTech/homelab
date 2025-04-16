@@ -14,7 +14,7 @@ jest.mock('react-router-dom', () => ({
 jest.mock('./components/Navbar', () => () => <div data-testid="navbar">Navbar</div>);
 jest.mock('./components/Footer', () => () => <div data-testid="footer">Footer</div>);
 
-test('renders main app structure', () => {
+test('renders main app structure test', () => {
   render(<App />);
   const navbarElement = screen.getByTestId('navbar');
   const footerElement = screen.getByTestId('footer');
