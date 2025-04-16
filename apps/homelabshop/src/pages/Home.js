@@ -5,7 +5,7 @@ function Home() {
   return (
     <div>
       <h1>Bienvenido a HomelabShop</h1>
-      <p>Tienda de ejemplo para el proyecto Homelab.</p>
+      <p>El mejor E-Commerce montado en un Homelab</p>
 
       <div style={{ marginTop: '20px' }}>
         <Link to="/products" className="btn">Ver Productos</Link>
