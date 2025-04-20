@@ -32,6 +32,7 @@ test-products-api:
   image: python:3.9-slim
   script:
     - cd apps/products-api
+    - export PYTHONPATH=$(pwd)
     - pip install -r requirements.txt
     - pytest -v tests/
   rules:
@@ -44,6 +45,7 @@ test-orders-api:
   image: python:3.9-slim
   script:
     - cd apps/orders-api
+    - export PYTHONPATH=$(pwd)
     - pip install -r requirements.txt
     - pytest -v tests/
   rules:
