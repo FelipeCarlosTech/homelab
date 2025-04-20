@@ -17,7 +17,6 @@ class OrdersAPITest(unittest.TestCase):
     def test_orders_endpoint_structure(self):
         # Basic test that checks if the endpoint returns a list
         # In a real environment, you would mock the database
-        # This will likely fail without mocking, which is fine for a learning exercise
         response = self.app.get("/orders")
         self.assertEqual(response.content_type, "application/json")
 
