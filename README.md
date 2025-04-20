@@ -10,6 +10,34 @@ This project provides a full infrastructure-as-code solution for managing a home
 - **Ansible** for configuration management
 - **K3s** as a lightweight Kubernetes distribution
 
+## Architecture
+
+```
+┌─────────────────────────────────┐      ┌─────────────────┐
+│           Client Device         │      │   DNS Server    │
+└───────────────┬─────────────────┘      └────────┬────────┘
+                │                                  │
+                ▼                                  ▼
+         ┌──────────────┐               ┌──────────────────┐
+         │  Ingress     │◄──────────────┤ TLS Certificates │
+         │  Controller  │               └──────────────────┘
+         └───────┬──────┘
+                 │
+     ┌───────────┼────────────┬─────────────────┐
+     │           │            │                 │
+     ▼           ▼            ▼                 ▼
+┌─────────┐ ┌─────────┐ ┌──────────┐     ┌────────────┐
+│ Web UI  │ │Products │ │ Orders   │     │ Monitoring │
+│ Service │ │ API     │ │ API      │     │ Stack      │
+└────┬────┘ └────┬────┘ └────┬─────┘     └─────┬──────┘
+     │           │           │                  │
+     │           └─────┬─────┘                  │
+     │                 ▼                        │
+     │          ┌────────────┐                 │
+     └──────────► PostgreSQL ◄─────────────────┘
+                └────────────┘
+```
+
 ## Components
 
 ### Terraform Modules
@@ -134,6 +162,60 @@ homelab/
 │               └── main.tf     # Microservices deployment configuration
 ```
 
+## Running Tests
+
+To run the tests for the applications in this project:
+
+### E-commerce Web App Tests:
+
+```bash
+cd apps/homelabshop
+npm test
+```
+
+This will run the React testing suite using Jest and React Testing Library.
+
+### API Tests:
+
+```bash
+cd apps/products-api
+python -m pytest
+
+cd apps/orders-api
+python -m pytest
+```
+
+## Deployment Environments
+
+This project supports multiple deployment environments:
+
+### Local Environment
+- Uses K3s on local machines
+- Perfect for development and testing
+- Low resource requirements
+- Setup: `./infrastructure/terraform/terraform-init.sh local`
+
+### AWS Environment
+- Production-ready environment using EKS
+- Supports auto-scaling and high availability
+- Requires AWS credentials configuration
+- Setup: `./infrastructure/terraform/terraform-init.sh aws`
+
+## Microservices Relationships
+
+```mermaid
+graph LR
+    A[Client Browser] -->|HTTPS| B[Web UI Service]
+    B -->|API calls| C[Products API]
+    B -->|API calls| D[Orders API]
+    C -->|Query/Store| E[PostgreSQL]
+    D -->|Query/Store| E
+    F[Prometheus] -->|Scrape| C
+    F -->|Scrape| D
+    F -->|Scrape| B
+    G[Grafana] -->|Query| F
+```
+
 ## Deployed Services
 
 ### Microservices
@@ -235,6 +317,38 @@ Key configuration files:
 - `infrastructure/terraform/modules/databases/templates/`: Database templates
 - `infrastructure/terraform/modules/microservices/templates/`: Microservices templates
 
+## Maintenance
+
+### System Updates
+
+Regular maintenance tasks:
+
+```bash
+# Update K3s version
+ansible-playbook playbooks/upgrade-k3s.yml
+
+# Backup all persistent data 
+./scripts/backup-data.sh
+
+# Update Terraform modules
+terraform init -upgrade
+```
+
+### Application Updates
+
+To update the applications:
+
+1. Build new application versions:
+   ```bash
+   cd apps/
+   ./setup-apps.sh build
+   ```
+
+2. Deploy updated applications:
+   ```bash
+   ./setup-apps.sh deploy
+   ```
+
 ## Troubleshooting
 
 Common issues:
@@ -262,4 +376,36 @@ Backup strategies:
 - SSH root login and password authentication disabled by default
 - UFW firewall automatically configured
 - Network policies restrict pod-to-pod communication
+
+## Contributing
+
+Contributions are welcome! To contribute to this project:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/my-feature`
+5. Submit a pull request
+
+Please make sure to update tests and documentation as appropriate.
+
+## Frequently Asked Questions
+
+### General Questions
+- **Q: Is this suitable for production use?**  
+  A: While the system is designed to be robust, it's primarily intended for homelab environments.
+
+- **Q: What's the minimum number of nodes required?**  
+  A: You can run the system on a single node, but 3 nodes are recommended for high availability.
+
+### Technical Questions
+- **Q: How do I add a new microservice?**  
+  A: Create a new service directory in the `apps/` folder and add its deployment in `infrastructure/terraform/modules/microservices/main.tf`.
+
+- **Q: Can I use a different database system?**  
+  A: Yes, modify the `databases` module to deploy your preferred database.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
