@@ -104,7 +104,7 @@ build-homelabshop:
 # ------ DEPLOY STAGE ------
 
 deploy-products-api:
-  <<: *shell_template
+  <<: *shell_job
   stage: deploy
   script:
     - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices products-api
@@ -117,7 +117,7 @@ deploy-products-api:
         - apps/products-api/**/*
 
 deploy-orders-api:
-  <<: *shell_template
+  <<: *shell_job
   stage: deploy
   script:
     - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices orders-api
@@ -130,7 +130,7 @@ deploy-orders-api:
         - apps/orders-api/**/*
 
 deploy-homelabshop:
-  <<: *shell_template
+  <<: *shell_job
   stage: deploy
   script:
     - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices ecommerce-web
