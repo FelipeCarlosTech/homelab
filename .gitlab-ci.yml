@@ -5,6 +5,7 @@ stages:
 
 variables:
   DOCKER_REGISTRY: "192.168.1.22:5000"
+  K8S_CONFIG_FILE: "/home/gitlab-runner/.kube/config"
 
 default:
   tags:
@@ -106,8 +107,8 @@ deploy-products-api:
   <<: *shell_job
   stage: deploy
   script:
-    - kubectl rollout restart deployment -n microservices products-api
-    - kubectl rollout status deployment -n microservices products-api
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices products-api
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices products-api
   dependencies:
     - build-products-api
   rules:
@@ -119,8 +120,8 @@ deploy-orders-api:
   <<: *shell_job
   stage: deploy
   script:
-    - kubectl rollout restart deployment -n microservices orders-api
-    - kubectl rollout status deployment -n microservices orders-api
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices orders-api
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices orders-api
   dependencies:
     - build-orders-api
   rules:
@@ -132,8 +133,8 @@ deploy-homelabshop:
   <<: *shell_job
   stage: deploy
   script:
-    - kubectl rollout restart deployment -n microservices ecommerce-web
-    - kubectl rollout status deployment -n microservices ecommerce-web
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout restart deployment -n microservices ecommerce-web
+    - kubectl --kubeconfig=$K8S_CONFIG_FILE rollout status deployment -n microservices ecommerce-web
   dependencies:
     - build-homelabshop
   rules:
